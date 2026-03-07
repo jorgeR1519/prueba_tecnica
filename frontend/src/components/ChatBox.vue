@@ -2,9 +2,14 @@
   <div class="chat-container">
     <div class="chat-header">
       <h3>💬 Chat con Ollama</h3>
-      <span class="status" :class="{ connected: isConnected }">
-        {{ isConnected ? 'Conectado' : 'Desconectado' }}
-      </span>
+      <div class="header-right">
+        <span class="status" :class="{ connected: isConnected }">
+          {{ isConnected ? 'Conectado' : 'Desconectado' }}
+        </span>
+        <button class="clear-btn" @click="clearChat" title="Limpiar chat">
+          🗑️
+        </button>
+      </div>
     </div>
     
     <div class="chat-messages" ref="messagesContainer">
@@ -50,8 +55,9 @@
 import { ref, onMounted, nextTick, watch } from 'vue'
 import axios from 'axios'
 
-const OLLAMA_URL = 'http://localhost:11434/api/chat'
-const MODEL_NAME = 'gemma3:4b'  // Puedes cambiar a otro modelo disponible
+// Usar proxy de Vite para evitar CORS
+const OLLAMA_URL = '/ollama'
+const MODEL_NAME = 'gemma3:4b'  // Verifica que este modelo esté descargado
 
 const messages = ref([
   {
@@ -67,11 +73,12 @@ const messagesContainer = ref(null)
 // Verificar conexión con Ollama al montar el componente
 const checkConnection = async () => {
   try {
-    const response = await axios.get('http://localhost:11434/api/tags', { timeout: 3000 })
+    const response = await axios.get(`${OLLAMA_URL}/api/tags`, { timeout: 5000 })
     isConnected.value = response.status === 200
+    console.log('Ollama conectado. Modelos disponibles:', response.data.models)
   } catch (error) {
     isConnected.value = false
-    console.log('Ollama no disponible:', error.message)
+    console.error('Ollama no disponible:', error.message)
   }
 }
 
@@ -92,14 +99,14 @@ const sendMessage = async () => {
   await scrollToBottom()
   
   try {
-    const response = await axios.post(OLLAMA_URL, {
+    const response = await axios.post(`${OLLAMA_URL}/api/chat`, {
       model: MODEL_NAME,
       messages: messages.value.map(msg => ({
         role: msg.role,
         content: msg.content
       })),
       stream: false
-    })
+    }, { timeout: 60000 })
     
     // Agregar respuesta del asistente
     messages.value.push({
@@ -107,10 +114,18 @@ const sendMessage = async () => {
       content: response.data.message.content
     })
   } catch (error) {
-    console.error('Error al comunicarse con Ollama:', error)
+    console.error('Error completo:', error)
+    let errorMsg = 'Lo siento, hubo un error al procesar tu mensaje.'
+    if (error.code === 'ECONNREFUSED') {
+      errorMsg = 'No se puede conectar a Ollama. ¿Está ejecutándose en localhost:11434?'
+    } else if (error.response) {
+      errorMsg = `Error del servidor: ${error.response.status} - ${error.response.data?.error || 'Sin detalles'}`
+    } else if (error.message) {
+      errorMsg = `Error: ${error.message}`
+    }
     messages.value.push({
       role: 'assistant',
-      content: 'Lo siento, hubo un error al procesar tu mensaje. Asegúrate de que Ollama esté ejecutándose.'
+      content: errorMsg
     })
   } finally {
     isLoading.value = false
@@ -137,6 +152,16 @@ onMounted(() => {
 watch(messages.value, () => {
   scrollToBottom()
 }, { deep: true })
+
+// Limpiar el chat
+const clearChat = () => {
+  messages.value = [
+    {
+      role: 'assistant',
+      content: '¡Hola! Soy tu asistente de IA. ¿En qué puedo ayudarte hoy?'
+    }
+  ]
+}
 </script>
 
 <style scoped>
@@ -162,6 +187,26 @@ watch(messages.value, () => {
 .chat-header h3 {
   margin: 0;
   font-size: 18px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.clear-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s;
+}
+
+.clear-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 .status {

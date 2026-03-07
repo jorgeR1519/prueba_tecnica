@@ -19,7 +19,8 @@ prueba_tecnica/
 │   ├── models.py            # Modelos Pydantic
 │   ├── database/
 │   │   └── users.txt        # Base de datos de usuarios
-│   └── requirements.txt     # Dependencias Python
+│   ├── requirements.txt     # Dependencias Python
+│   └── Dockerfile           # Imagen Docker del backend
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
@@ -32,7 +33,10 @@ prueba_tecnica/
 │   │   ├── App.vue
 │   │   └── main.js
 │   ├── package.json
-│   └── vite.config.js
+│   ├── vite.config.js       # Configuración de Vite con proxy
+│   ├── nginx.conf           # Configuración de Nginx para Docker
+│   └── Dockerfile           # Imagen Docker del frontend
+├── docker-compose.yml       # Orquestación de contenedores
 └── README.md
 ```
 
@@ -42,11 +46,14 @@ prueba_tecnica/
 
 ### Prerrequisitos
 
-- Python 3.8+
-- Node.js 18+
+- Python 3.8+ (para desarrollo local)
+- Node.js 18+ (para desarrollo local)
+- Docker y Docker Compose (opcional, para contenedores)
 - Ollama (opcional, para el chat con IA)
 
-### 1. Backend (FastAPI)
+### Opción 1: Desarrollo Local (Sin Docker)
+
+#### 1.1 Backend (FastAPI)
 
 ```bash
 # Navegar al directorio del backend
@@ -65,7 +72,7 @@ python main.py
 
 El backend estará disponible en: `http://localhost:8000`
 
-### 2. Frontend (Vue.js)
+#### 1.2 Frontend (Vue.js)
 
 ```bash
 # Navegar al directorio del frontend
@@ -80,7 +87,18 @@ npm run dev
 
 El frontend estará disponible en: `http://localhost:5173`
 
-### 3. Ollama (Opcional)
+### Opción 2: Con Docker
+
+```bash
+# En la raíz del proyecto
+docker-compose up --build
+```
+
+Esto creará:
+- Frontend: `http://localhost:80`
+- Backend: `http://localhost:8000`
+
+### 3. Ollama (Chat con IA)
 
 Para usar el chat con IA:
 
@@ -90,6 +108,8 @@ Para usar el chat con IA:
 ollama serve
 ollama pull gemma3:4b
 ```
+
+**Nota:** Verifica los modelos disponibles con `ollama list`. Si no tienes `gemma3:4b`, puedes usar otro modelo como `llama2` y cambiarlo en `frontend/src/components/ChatBox.vue`.
 
 ---
 

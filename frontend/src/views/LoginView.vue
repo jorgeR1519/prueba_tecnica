@@ -60,7 +60,9 @@ const password = ref('')
 const loading = ref(false)
 const error = ref('')
 
-const API_URL = 'http://localhost:8000'
+// Detectar si estamos en producción (Docker)
+const isProduction = window.location.hostname !== 'localhost' && window.location.port !== '5173'
+const API_URL = isProduction ? '' : 'http://localhost:8000'
 
 const handleLogin = async () => {
   loading.value = true

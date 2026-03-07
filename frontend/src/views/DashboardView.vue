@@ -27,6 +27,18 @@
             <span class="value">{{ user?.email }}</span>
           </div>
         </div>
+        
+        <div class="reports-section">
+          <h3>Reportes</h3>
+          <div class="report-buttons">
+            <button @click="downloadPDF" class="report-btn pdf-btn" :disabled="isDownloading">
+              📄 Descargar PDF
+            </button>
+            <button @click="downloadExcel" class="report-btn excel-btn" :disabled="isDownloading">
+              📊 Descargar Excel
+            </button>
+          </div>
+        </div>
       </div>
       
       <div class="chat-section">
@@ -44,8 +56,11 @@ import ChatBox from '../components/ChatBox.vue'
 
 const router = useRouter()
 const user = ref(null)
+const isDownloading = ref(false)
 
-const API_URL = 'http://localhost:8000'
+// Detectar si estamos en producción (Docker)
+const isProduction = window.location.hostname !== 'localhost' && window.location.port !== '5173'
+const API_URL = isProduction ? '' : 'http://localhost:8000'
 
 // Cargar información del usuario
 const fetchUserInfo = async () => {
@@ -69,6 +84,60 @@ const fetchUserInfo = async () => {
     if (error.response?.status === 401) {
       logout()
     }
+  }
+}
+
+// Descargar reporte PDF
+const downloadPDF = async () => {
+  isDownloading.value = true
+  try {
+    const token = localStorage.getItem('token')
+    const response = await axios.get(`${API_URL}/report/pdf`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      responseType: 'blob'
+    })
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'usuarios_reporte.pdf')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (error) {
+    console.error('Error al descargar PDF:', error)
+    alert('Error al generar el reporte PDF')
+  } finally {
+    isDownloading.value = false
+  }
+}
+
+// Descargar reporte Excel
+const downloadExcel = async () => {
+  isDownloading.value = true
+  try {
+    const token = localStorage.getItem('token')
+    const response = await axios.get(`${API_URL}/report/excel`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      responseType: 'blob'
+    })
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'usuarios_reporte.xlsx')
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (error) {
+    console.error('Error al descargar Excel:', error)
+    alert('Error al generar el reporte Excel')
+  } finally {
+    isDownloading.value = false
   }
 }
 
@@ -178,6 +247,60 @@ onMounted(() => {
   font-size: 16px;
   color: #333;
   font-weight: 500;
+}
+
+.reports-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.reports-section h3 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.report-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-btn {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pdf-btn {
+  background: #f44336;
+  color: white;
+}
+
+.pdf-btn:hover:not(:disabled) {
+  background: #da190b;
+}
+
+.excel-btn {
+  background: #4caf50;
+  color: white;
+}
+
+.excel-btn:hover:not(:disabled) {
+  background: #388e3c;
+}
+
+.report-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 
 .chat-section {
