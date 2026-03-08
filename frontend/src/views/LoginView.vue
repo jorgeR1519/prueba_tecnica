@@ -61,7 +61,10 @@ const loading = ref(false)
 const error = ref('')
 
 // Detectar si estamos en producción (Docker)
-const isProduction = window.location.hostname !== 'localhost' && window.location.port !== '5173'
+// Usamos una variable de entorno o detectamos por el puerto/del hostname
+const isProduction = import.meta.env.PROD || window.location.port === '80' || window.location.port === '8080'
+// En producción (Docker), usamos ruta relativa (proxy de nginx)
+// En desarrollo, usamos localhost:8000
 const API_URL = isProduction ? '' : 'http://localhost:8000'
 
 const handleLogin = async () => {

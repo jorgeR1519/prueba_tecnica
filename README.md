@@ -7,6 +7,8 @@ Esta es una aplicación completa que incluye:
 - **Frontend**: Interfaz web con Vue.js 3
 - **Chat**: Integración con Ollama para chat con IA (solo usuarios autenticados)
 
+> **Nota**: La aplicación detecta automáticamente si está corriendo en local o Docker y adapta su configuración automáticamente.
+
 ---
 
 ## 🏗️ Estructura del Proyecto
@@ -100,8 +102,9 @@ Esto creará:
 
 ### 3. Ollama (Chat con IA)
 
-Para usar el chat con IA:
+La aplicación detecta automáticamente el modelo según el entorno:
 
+#### Para desarrollo local:
 ```bash
 # Instalar Ollama desde https://ollama.ai
 # Luego ejecutar:
@@ -109,7 +112,19 @@ ollama serve
 ollama pull gemma3:4b
 ```
 
-**Nota:** Verifica los modelos disponibles con `ollama list`. Si no tienes `gemma3:4b`, puedes usar otro modelo como `llama2` y cambiarlo en `frontend/src/components/ChatBox.vue`.
+#### Para Docker:
+```bash
+# Ollama en Docker requiere menos memoria, usa tinyllama
+ollama pull tinyllama
+```
+
+**Modelos según entorno:**
+| Entorno | Modelo | Memoria |
+|---------|--------|---------|
+| Local | gemma3:4b | ~4GB |
+| Docker | tinyllama | ~700MB |
+
+> **Nota**: El código detecta automáticamente qué modelo usar según el entorno. Si tienes poca memoria, puedes usar `tinyllama` también en local.
 
 ---
 
@@ -179,6 +194,10 @@ Si Ollama no está disponible, el chat mostrará un mensaje de advertencia pero 
 4. **Vue Router**: Gestión de rutas con guards para proteger dashboard
 5. **CORS configurado**: Permite comunicación entre frontend y backend
 6. **Almacenamiento local**: Token guardado en localStorage para persistencia
+7. **Detección automática de entorno**: La aplicación detecta si está en local o Docker y adapta:
+   - URL de la API del backend
+   - Modelo de Ollama a usar
+   - Proxy de Nginx para las rutas de API
 
 ---
 

@@ -57,7 +57,9 @@ import axios from 'axios'
 
 // Usar proxy de Vite para evitar CORS
 const OLLAMA_URL = '/ollama'
-const MODEL_NAME = 'gemma3:4b'  // Verifica que este modelo esté descargado
+// Modelo según el entorno: en local gemma3:4b, en Docker tinyllama (menos memoria)
+const isProduction = import.meta.env.PROD || window.location.port === '80' || window.location.port === '8080'
+const MODEL_NAME = isProduction ? 'tinyllama' : 'gemma3:4b'
 
 const messages = ref([
   {
